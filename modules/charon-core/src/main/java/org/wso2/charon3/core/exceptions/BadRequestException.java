@@ -28,7 +28,7 @@ public class BadRequestException extends AbstractCharonException {
     }
 
     public BadRequestException(String scimType) {
-        this("test", scimType);
+        this(ResponseCodeConstants.DESC_BAD_REQUEST, scimType);
     }
 
     public BadRequestException(String details, String scimType) {
