@@ -54,6 +54,16 @@ public class ResourceManagerUtil {
                                                                      String requestedExcludingAttributes)
             throws CharonException {
 
+        ArrayList<AttributeSchema> attributeSchemaArrayList  =
+                getOnlyRequiredAttributes(schema, requestedAttributes, requestedExcludingAttributes);
+        return convertSchemasToURIs(attributeSchemaArrayList);
+    }
+
+    public static ArrayList<AttributeSchema> getOnlyRequiredAttributes(SCIMResourceTypeSchema schema,
+                                                                       String requestedAttributes,
+                                                                       String requestedExcludingAttributes)
+            throws CharonException {
+
         ArrayList<AttributeSchema> attributeSchemaArrayList = (ArrayList<AttributeSchema>)
                 CopyUtil.deepCopy(schema.getAttributesList());
 
@@ -111,7 +121,7 @@ public class ResourceManagerUtil {
                     requestedAttributes, requestedExcludingAttributes,
                     requestedAttributesList, requestedExcludingAttributesList);
         }
-        return convertSchemasToURIs(attributeSchemaArrayList);
+        return attributeSchemaArrayList;
     }
 
     /*

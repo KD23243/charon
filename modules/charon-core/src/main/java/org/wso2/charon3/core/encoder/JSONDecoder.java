@@ -15,6 +15,7 @@
  */
 package org.wso2.charon3.core.encoder;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,8 +54,10 @@ import org.wso2.charon3.core.utils.codeutils.SearchRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.wso2.charon3.core.schema.SCIMDefinitions.DataType.BINARY;
 import static org.wso2.charon3.core.schema.SCIMDefinitions.DataType.BOOLEAN;
@@ -100,7 +103,9 @@ public class JSONDecoder {
         try {
             decodedJsonObj = new JSONObject(new JSONTokener(scimResourceString));
         } catch (JSONException e) {
-            logger.debug("json error in decoding the resource", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("json error in decoding the resource", e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
 
@@ -121,8 +126,10 @@ public class JSONDecoder {
         try {
             resources = decodedJsonObj.getJSONArray(SCIMConstants.ListedResourceSchemaConstants.RESOURCES);
         } catch (JSONException e) {
-          logger.debug("could not get '{}' from json structure, result is empty",
-                       SCIMConstants.ListedResourceSchemaConstants.RESOURCES);
+            if (logger.isDebugEnabled()) {
+                logger.debug("could not get '{}' from json structure, result is empty",
+                        SCIMConstants.ListedResourceSchemaConstants.RESOURCES);
+            }
           return listedResource;
         }
 
@@ -131,8 +138,10 @@ public class JSONDecoder {
             try {
                 resource = resources.getJSONObject(i);
             } catch (JSONException e) {
-                logger.debug("could not get '{}' from json structure",
-                             SCIMConstants.ListedResourceSchemaConstants.RESOURCES);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("could not get '{}' from json structure",
+                            SCIMConstants.ListedResourceSchemaConstants.RESOURCES);
+                }
                 throw new CharonException(ResponseCodeConstants.INVALID_SYNTAX, e);
             }
             try {
@@ -159,7 +168,9 @@ public class JSONDecoder {
         try {
             decodedJsonObj = new JSONObject(new JSONTokener(scimErrorString));
         } catch (JSONException e) {
-            logger.debug("json error in decoding the resource", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("json error in decoding the resource", e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
 
@@ -214,7 +225,9 @@ public class JSONDecoder {
             JSONArray schemas = jsonObject.getJSONArray(ResponseCodeConstants.SCHEMAS);
             value = schemas.getString(0);
         } catch (JSONException e) {
-            logger.debug("could not get '{}' value from scim resource as an array", ResponseCodeConstants.SCHEMAS);
+            if (logger.isDebugEnabled()) {
+                logger.debug("could not get '{}' value from scim resource as an array", ResponseCodeConstants.SCHEMAS);
+            }
             // if the value could not be extracted as JSONArray we will give it another chance to extract it as
             // simple string
             value = getStringValueFromJson(jsonObject, ResponseCodeConstants.SCHEMAS);
@@ -238,7 +251,9 @@ public class JSONDecoder {
         try {
             value = jsonObject.getString(name);
         } catch (JSONException e) {
-            logger.debug("could not get '{}' value from scim resource", name, e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("could not get '{}' value from scim resource", name, e);
+            }
         }
         return value;
     }
@@ -256,7 +271,9 @@ public class JSONDecoder {
         try {
             totalResults = jsonObject.getInt(name);
         } catch (JSONException e) {
-            logger.debug("could not get '{}' value from scim resource", name, e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("could not get '{}' value from scim resource", name, e);
+            }
             throw new CharonException(ResponseCodeConstants.INVALID_SYNTAX, e);
         }
         return totalResults;
@@ -365,7 +382,9 @@ public class JSONDecoder {
             }
             return scimObject;
         } catch (JSONException e) {
-            logger.debug("json error in decoding the resource", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("json error in decoding the resource", e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
     }
@@ -756,8 +775,10 @@ public class JSONDecoder {
                 patchOperation.setValues(operation.opt(SCIMConstants.OperationalConstants.VALUE));
                 operationList.add(patchOperation);
             }
-        } catch (JSONException e) {
-            logger.debug("json error in decoding the request", e);
+        } catch (JSONException | ClassCastException e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("json error in decoding the request", e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
         return  operationList;
@@ -848,7 +869,9 @@ public class JSONDecoder {
             return searchRequest;
 
         } catch (JSONException | IOException e) {
-            logger.debug("Error while decoding the resource string", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Error while decoding the resource string", e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
     }
@@ -865,8 +888,10 @@ public class JSONDecoder {
         List<BulkRequestContent> usersEndpointOperationList = new ArrayList<>();
         List<BulkRequestContent> groupsEndpointOperationList = new ArrayList<>();
         List<BulkRequestContent> rolesEndpointOperationList = new ArrayList<>();
+        List<BulkRequestContent> rolesV2EndpointOperationList = new ArrayList<>();
         int failOnErrorsAttribute;
         List<String> schemas = new ArrayList<>();
+        Set<String> encounteredBulkIds = new HashSet<>();
 
         JSONObject decodedObject;
         try {
@@ -903,11 +928,16 @@ public class JSONDecoder {
 
                 if (requestMethod.equals(SCIMConstants.OperationalConstants.POST)) {
 
-                    if (!member.optString(SCIMConstants.OperationalConstants.BULK_ID).equals("") &&
-                            member.optString(SCIMConstants.OperationalConstants.BULK_ID) != null) {
+                    String bulkId = member.optString(SCIMConstants.OperationalConstants.BULK_ID);
 
+                    if (StringUtils.isNotEmpty(bulkId)) {
+                        if (encounteredBulkIds.contains(bulkId)) {
+                            String error = "Duplicate bulkId found: " + bulkId;
+                            throw new BadRequestException(error, ResponseCodeConstants.INVALID_VALUE);
+                        }
+                        encounteredBulkIds.add(bulkId);
                         setRequestData(requestType, requestMethod, requestVersion, member, usersEndpointOperationList,
-                                groupsEndpointOperationList, rolesEndpointOperationList);
+                                groupsEndpointOperationList, rolesEndpointOperationList, rolesV2EndpointOperationList);
                     } else {
                         String error = "JSON string could not be decoded properly.Required " +
                                 "attribute BULK_ID is missing in the request";
@@ -916,7 +946,7 @@ public class JSONDecoder {
                     }
                 } else {
                     setRequestData(requestType, requestMethod, requestVersion, member, usersEndpointOperationList,
-                            groupsEndpointOperationList, rolesEndpointOperationList);
+                            groupsEndpointOperationList, rolesEndpointOperationList, rolesV2EndpointOperationList);
                 }
             }
             //extract [failOnErrors] attribute from Json string
@@ -926,18 +956,23 @@ public class JSONDecoder {
             bulkRequestDataObject.setUserOperationRequests(usersEndpointOperationList);
             bulkRequestDataObject.setGroupOperationRequests(groupsEndpointOperationList);
             bulkRequestDataObject.setRoleOperationRequests(rolesEndpointOperationList);
+            bulkRequestDataObject.setRoleV2OperationRequests(rolesV2EndpointOperationList);
 
         } catch (JSONException e) {
-            String error = "JSON string could not be decoded properly.";
-            logger.debug(error, e);
+            if (logger.isDebugEnabled()) {
+                String error = "JSON string could not be decoded properly.";
+                logger.debug(error, e);
+            }
             throw new BadRequestException(ResponseCodeConstants.INVALID_SYNTAX);
         }
         return bulkRequestDataObject;
     }
 
     private void setRequestData(String requestType, String requestMethod, String requestVersion, JSONObject member,
-            List<BulkRequestContent> usersEndpointOperationList, List<BulkRequestContent> groupsEndpointOperationList,
-            List<BulkRequestContent> rolesEndpointOperationList) {
+                                List<BulkRequestContent> usersEndpointOperationList,
+                                List<BulkRequestContent> groupsEndpointOperationList,
+                                List<BulkRequestContent> rolesEndpointOperationList,
+                                List<BulkRequestContent> rolesV2EndpointOperationList) {
 
         // Create user request list.
         if (requestType.contains(SCIMConstants.USER_ENDPOINT)) {
@@ -957,7 +992,11 @@ public class JSONDecoder {
         }
 
         // Create role request list.
-        if (requestType.contains(SCIMConstants.ROLE_ENDPOINT)) {
+        if (requestType.contains(SCIMConstants.ROLE_V2_ENDPOINT)) {
+            BulkRequestContent newRequestData =
+                    getBulkRequestContent(member, requestMethod, requestType, requestVersion);
+            rolesV2EndpointOperationList.add(newRequestData);
+        } else if (requestType.contains(SCIMConstants.ROLE_ENDPOINT)) {
             BulkRequestContent newRequestData =
                     getBulkRequestContent(member, requestMethod, requestType, requestVersion);
             rolesEndpointOperationList.add(newRequestData);
