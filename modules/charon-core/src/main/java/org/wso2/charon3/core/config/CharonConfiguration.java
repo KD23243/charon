@@ -36,10 +36,10 @@ public class CharonConfiguration implements Configuration {
     private int maxPayLoadSize;
     private int maxResults;
     private ArrayList<Object[]> authenticationSchemes = new ArrayList<Object[]>();
-    private boolean cursorSupport;
 
     //default count value for pagination
     private int count;
+    private boolean cursorSupport;
 
     /*
      * set documentationURL
@@ -80,7 +80,7 @@ public class CharonConfiguration implements Configuration {
     }
 
     /**
-     * Set cursor pagination support
+     * Set pagination support
      * @param supported
      */
     public void setCursorPaginationSupport(boolean supported) {
