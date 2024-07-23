@@ -423,8 +423,6 @@ public class JSONEncoder {
                 config.get(SCIMConfigConstants.CURSOR));
         paginationObject.put(SCIMConstants.ServiceProviderConfigSchemaConstants.INDEX,
                 config.get(SCIMConfigConstants.INDEX));
-        paginationObject.put(SCIMConstants.ServiceProviderConfigSchemaConstants.CURSOR_TIMEOUT,
-                config.get(SCIMConfigConstants.CURSOR_TIMEOUT));
         paginationObject.put(SCIMConstants.ServiceProviderConfigSchemaConstants.DEFAULT_PAGINATION_METHOD,
                 config.get(SCIMConfigConstants.DEFAULT_PAGINATION_METHOD));
         paginationObject.put(SCIMConstants.ServiceProviderConfigSchemaConstants.DEFAULT_PAGE_SIZE,

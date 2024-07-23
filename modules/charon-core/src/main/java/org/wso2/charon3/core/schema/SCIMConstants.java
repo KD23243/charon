@@ -699,9 +699,6 @@ public class SCIMConstants {
         public static final String INDEX = "index";
         public static final String INDEX_URI =
                 "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig:pagination.index";
-        public static final String CURSOR_TIMEOUT = "cursorTimeout";
-        public static final String CURSOR_TIMEOUT_URI =
-                "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig:pagination.cursorTimeout";
         public static final String DEFAULT_PAGINATION_METHOD = "defaultPaginationMethod";
         public static final String DEFAULT_PAGINATION_METHOD_URI =
                 "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig:pagination.defaultPaginationMethod";
@@ -720,7 +717,6 @@ public class SCIMConstants {
         public static final String PAGINATION_DESC = "A complex type which specifies the pagination types available.";
         public static final String CURSOR_DESC = "A boolean which specifies if cursor pagination is supported";
         public static final String INDEX_DESC = "A boolean which specifies if index pagination is supported";
-        public static final String CURSOR_TIMEOUT_DESC = "A boolean which specifies if cursor timeout is supported";
         public static final String DEFAULT_PAGINATION_METHOD_DESC = "A boolean which specifies if index pagination is supported";
         public static final String DEFAULT_PAGE_SIZE_DESC = "An integer which specifies the default number of " +
                 "results returned in a page";
